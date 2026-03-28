@@ -7,7 +7,7 @@
  * lenses, a hardware part, etc.). This classification is crucial for the filtering
  * and matching logic in the recommendations feature.
  */
-import { includesAny } from './text';
+import { includesAny } from './text.js';
 /**
  * Analyzes a raw CSV row and returns a set of boolean flags describing its type.
  * The logic is based on a series of heuristics that check for keywords and patterns
