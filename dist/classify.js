@@ -23,6 +23,29 @@ export function classifyRow(row) {
     const status = (row['Status'] || '').trim().toLowerCase();
     const productLower = product.toLowerCase();
     const descLower = description.toLowerCase();
+    const forceOtherSku = productLower.startsWith('j-avs') || productLower.startsWith('j-els');
+    // Business override: specific prefixes should always classify as "Other".
+    if (forceOtherSku) {
+        const isGood = status === 'good';
+        return {
+            isSample: false,
+            isReserve: false,
+            isRx: false,
+            isFront: false,
+            isTemples: false,
+            isHardware: false,
+            isParts: false,
+            isClipOn: false,
+            isLens: false,
+            isHorn: false,
+            isCompleteFrame: false,
+            isOther: true,
+            isUnknown: false,
+            isGood,
+            isDemo: false,
+            isDemoLens: false,
+        };
+    }
     const productLowerExpanded = productLower.replace(/[-_/]+/g, ' ');
     const descLowerExpanded = descLower.replace(/[-_/]+/g, ' ');
     const lensSearchHaystack = `${descLower} ${productLower} ${descLowerExpanded} ${productLowerExpanded}`;
