@@ -23,7 +23,11 @@ export function classifyRow(row) {
     const status = (row['Status'] || '').trim().toLowerCase();
     const productLower = product.toLowerCase();
     const descLower = description.toLowerCase();
-    const forceOtherSku = productLower.startsWith('j-avs') || productLower.startsWith('j-els');
+    // The "O" department (X-O??-…: OVT vintage collectibles, OBX accessory boxes, OAC accessories,
+    // OTK trunks, and any family added later) is merchandise whatever the prefix letter says —
+    // a V-OVT reserve or an S-OAC sample of a collectible is still not a frame.
+    const isMerchDepartmentSku = /^[a-z]{1,3}-o[a-z]{2,3}-/.test(productLower);
+    const forceOtherSku = productLower.startsWith('j-avs') || productLower.startsWith('j-els') || isMerchDepartmentSku;
     // Business override: specific prefixes should always classify as "Other".
     if (forceOtherSku) {
         const isGood = status === 'good';
@@ -140,9 +144,16 @@ export function classifyRow(row) {
         return normalizedKeyword.trim().length > 0 && wordMatchHaystack.includes(normalizedKeyword);
     };
     const isApparel = hasStandaloneTee || apparelKeywords.some(matchesApparelKeyword);
-    const isAccessorySku = 
-    // General accessory prefixes
-    productLower.startsWith('jmm-acc') || productLower.startsWith('jmm-accs') || productLower.startsWith('jmm-case') ||
+    // Eyewear-department SKUs (J-E??-…) are frames only when the family is SN (sun) or RX. Every
+    // other family in the department is merchandise that ships alongside frames — AC accessories,
+    // DP displays, ID cards, BX boxes, CS/EC cases, DB dust bags, CC cloths, CN chains, BK books,
+    // IT inserts, and whatever family gets created next. Lenses (LS) and clip-ons (CO) have their
+    // own rules above, so they are left out of this pattern on purpose.
+    const eyewearFamily = (productLower.match(/^j-e([a-z]{2,3})-/) || [])[1] || '';
+    const isEyewearNonFrameFamily = !!eyewearFamily && !['sn', 'rx', 'ls', 'co'].includes(eyewearFamily);
+    const isAccessorySku = isEyewearNonFrameFamily ||
+        // General accessory prefixes
+        productLower.startsWith('jmm-acc') || productLower.startsWith('jmm-accs') || productLower.startsWith('jmm-case') ||
         productLower.startsWith('jmm-bwe') || productLower.startsWith('j-bwe') ||
         // Apparel
         productLower.startsWith('j-act') || // Apparel/clothing (varsity jackets, etc.)
