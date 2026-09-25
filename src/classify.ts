@@ -245,7 +245,7 @@ export function classifyRow(row: Record<string, string>) {
     // Pattern-based detection
     productLower.includes('-blts-') || productLower.includes('vinyl') || 
     productLower.includes('case-') || productLower.includes('envelope');
-  const isLikelyFrameSku = /^jmm[a-z]/.test(productLower) || (/^j-/.test(productLower) && !isAccessorySku);
+  const isLikelyFrameSku = /^jmm[a-z0-9]/.test(productLower) || (/^j-/.test(productLower) && !isAccessorySku);
 
   const forcedLensSku =
     isLensDepartmentSku ||

@@ -231,7 +231,7 @@ export function classifyRow(row) {
         // Pattern-based detection
         productLower.includes('-blts-') || productLower.includes('vinyl') ||
         productLower.includes('case-') || productLower.includes('envelope');
-    const isLikelyFrameSku = /^jmm[a-z]/.test(productLower) || (/^j-/.test(productLower) && !isAccessorySku);
+    const isLikelyFrameSku = /^jmm[a-z0-9]/.test(productLower) || (/^j-/.test(productLower) && !isAccessorySku);
     const forcedLensSku = isLensDepartmentSku ||
         productLower.startsWith('000-') ||
         productLower.startsWith('003-') ||
