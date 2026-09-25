@@ -109,7 +109,9 @@ export function classifyRow(row: Record<string, string>) {
   const isParts = product.startsWith('T-') || isFront || isTemples || isHardware;
 
   // --- 4. Other Category Classifications ---
-  const isClipOn = includesAny(descLower, ['clip-on', 'clip on', 'clipon']) || includesAny(productLower, ['clip-on', 'clipon']);
+  // A SAMPLE clip-on is a sample, not a clip-on (Carlos, Sep 25 2026): S-ECO-DYCP-40-CP /
+  // "SAMPLE: DEMONCEY-CLIP-ON, …" showed under Clip-Ons too. Same S- / "SAMPLE:" rule as isSample.
+  const isClipOn = !isSample && (includesAny(descLower, ['clip-on', 'clip on', 'clipon']) || includesAny(productLower, ['clip-on', 'clipon']));
   
   // A hint that an item is likely a frame based on common SKU prefixes.
   // Lens Detection: Uses keywords or SKU patterns, but avoids misclassifying frames that mention lens material.
