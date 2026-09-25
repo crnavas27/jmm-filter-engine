@@ -181,6 +181,16 @@ export function classifyRow(row: Record<string, string>) {
     isEyewearNonFrameFamily ||
     // General accessory prefixes
     productLower.startsWith('jmm-acc') || productLower.startsWith('jmm-accs') || productLower.startsWith('jmm-case') ||
+    // JMM-… merchandise families (Carlos, Sep 25 2026) — by SKU, because their descriptions are cut
+    // at ~30 characters and often name no product word ("Gold Pyrite 1/2 Rectangle Druz",
+    // "CLASSIC BLAZER - NAVY Size:48"). JMM frames never have a hyphen right after JMM (JMMHU-88).
+    productLower.startsWith('jmm-jw-') ||     // vintage jewelry
+    productLower.startsWith('jmm-ub') ||      // JMM clothing: UBC coats, UBCJ blazers, UBDBS suits, UBSS shirts, UBWT jackets, UBWTP/UBPCP pants, UBJB blankets
+    productLower.startsWith('jmm-pop-') ||    // point-of-purchase: vinyls, books
+    productLower.startsWith('jmm-lthr') ||    // leather card cases (Romeo, Macbeth, Ophelia, Cordelia)
+    productLower.startsWith('jmm-dustbag') || // display-tray dust bags
+    productLower.startsWith('jmm-rna-') || productLower.startsWith('jmm-bna-') || // Natrona rings, bracelets
+    productLower.startsWith('jmm-rwe-') ||    // Weston rings
     productLower.startsWith('jmm-bwe') || productLower.startsWith('j-bwe') ||
     // Apparel
     productLower.startsWith('j-act') || // Apparel/clothing (varsity jackets, etc.)
