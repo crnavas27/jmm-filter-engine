@@ -85,8 +85,17 @@ export function classifyRow(row: Record<string, string>) {
     /(^|[\s,;()\-])templ\b/.test(descLower) ||
     /\(pr\)/.test(descLower) ||
     /\bpair\b/.test(descLower);
-  const frontSkuHint = productLower.startsWith('f-') || /(^|[\-_])spf(\b|[\-_])/.test(productLower);
-  const templesSkuHint = productLower.startsWith('t-') || /(^|[\-_])spt(\b|[\-_])/.test(productLower);
+  // JMM's spare-part code (Carlos, Sep 25 2026): the SKU's FIRST segment ends in SPF (spare front)
+  // or SPT (spare temples) — the style's code with SPF/SPT glued on, then the colour: JMM48SPF-1D,
+  // JMMAARXSPF-1K, JMMZUSPT-6S. On the live stock CSV all 2,857 such SKUs are fronts or temples
+  // (2,756 sit beside their own style's frame, JMMZU-5C); the description can't be trusted for it
+  // (cut at ~30 characters: "…, Fron"; colour names like "Tempest"). Only the END of the FIRST
+  // segment counts, so "spf" anywhere else in a SKU never makes a frame a part.
+  const firstSegment = productLower.split('-')[0];
+  const spareFrontCode = /^jmm[a-z0-9]+spf$/.test(firstSegment);
+  const spareTemplesCode = /^jmm[a-z0-9]+spt$/.test(firstSegment);
+  const frontSkuHint = productLower.startsWith('f-') || /(^|[\-_])spf(\b|[\-_])/.test(productLower) || spareFrontCode;
+  const templesSkuHint = productLower.startsWith('t-') || /(^|[\-_])spt(\b|[\-_])/.test(productLower) || spareTemplesCode;
   const isFront = hasFrontDesc || frontSkuHint;
   const isTemples = hasTemplesDesc || templesSkuHint;
   // Leather pads are accessories, not hardware parts
