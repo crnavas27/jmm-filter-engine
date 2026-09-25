@@ -28,7 +28,11 @@ export function classifyRow(row: Record<string, string>) {
   // OTK trunks, and any family added later) is merchandise whatever the prefix letter says —
   // a V-OVT reserve or an S-OAC sample of a collectible is still not a frame.
   const isMerchDepartmentSku = /^[a-z]{1,3}-o[a-z]{2,3}-/.test(productLower);
-  const forceOtherSku = productLower.startsWith('j-avs') || productLower.startsWith('j-els') || isMerchDepartmentSku;
+  // J-ELS-… is the LENS department (Carlos, Sep 25 2026): LCR = CR39 lenses ("CR39-LENS, …"),
+  // MGL = mineral-glass lenses (Barberini). All 91 in the live stock CSV are lenses — they used to
+  // be forced into Other. A SKU rule, because their descriptions don't reliably say "lens".
+  const isLensDepartmentSku = /^j-els-/.test(productLower);
+  const forceOtherSku = productLower.startsWith('j-avs') || isMerchDepartmentSku;
 
   // Business override: specific prefixes should always classify as "Other".
   if (forceOtherSku) {
@@ -234,6 +238,7 @@ export function classifyRow(row: Record<string, string>) {
   const isLikelyFrameSku = /^jmm[a-z]/.test(productLower) || (/^j-/.test(productLower) && !isAccessorySku);
 
   const forcedLensSku =
+    isLensDepartmentSku ||
     productLower.startsWith('000-') ||
     productLower.startsWith('003-') ||
     (!isLikelyFrameSku && hasDemoLensLanguage);
