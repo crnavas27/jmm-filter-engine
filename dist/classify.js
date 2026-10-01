@@ -32,11 +32,14 @@ export function classifyRow(row) {
     // be forced into Other. A SKU rule, because their descriptions don't reliably say "lens".
     const isLensDepartmentSku = /^j-els-/.test(productLower);
     const forceOtherSku = productLower.startsWith('j-avs') || isMerchDepartmentSku;
+    // …but a SAMPLE of one (S-OAC-BB-A11-OS "SAMPLE: BASEBALL") is a sample, not Other (Carlos,
+    // Sep 30 2026) — still never a frame. Same S- / "SAMPLE:" rule as isSample below.
+    const isMerchSample = isMerchDepartmentSku && (product.startsWith('S-') || /(^|\s)sample:/.test(descLower));
     // Business override: specific prefixes should always classify as "Other".
     if (forceOtherSku) {
         const isGood = status === 'good';
         return {
-            isSample: false,
+            isSample: isMerchSample,
             isReserve: false,
             isRx: false,
             isFront: false,
@@ -47,7 +50,7 @@ export function classifyRow(row) {
             isLens: false,
             isHorn: false,
             isCompleteFrame: false,
-            isOther: true,
+            isOther: !isMerchSample,
             isUnknown: false,
             isGood,
             isDemo: false,
