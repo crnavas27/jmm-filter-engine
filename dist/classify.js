@@ -32,9 +32,11 @@ export function classifyRow(row) {
     // be forced into Other. A SKU rule, because their descriptions don't reliably say "lens".
     const isLensDepartmentSku = /^j-els-/.test(productLower);
     const forceOtherSku = productLower.startsWith('j-avs') || isMerchDepartmentSku;
-    // …but a SAMPLE of one (S-OAC-BB-A11-OS "SAMPLE: BASEBALL") is a sample, not Other (Carlos,
-    // Sep 30 2026) — still never a frame. Same S- / "SAMPLE:" rule as isSample below.
-    const isMerchSample = isMerchDepartmentSku && (product.startsWith('S-') || /(^|\s)sample:/.test(descLower));
+    // Carlos's rule (Sep 30 2026): EVERY SKU that starts with S- is a sample — no other rule
+    // overrides it. A sample of an O-department item (S-OAC-BB-A11-OS "SAMPLE: BASEBALL") used to be
+    // forced into Other here; it is a sample (still never a frame).
+    const isSampleSku = productLower.startsWith('s-');
+    const isMerchSample = isMerchDepartmentSku && (isSampleSku || /(^|\s)sample:/.test(descLower));
     // Business override: specific prefixes should always classify as "Other".
     if (forceOtherSku) {
         const isGood = status === 'good';
@@ -66,7 +68,7 @@ export function classifyRow(row) {
     };
     const wordMatchHaystack = `${toWordHaystack(productLower)}${toWordHaystack(descLower)}`;
     // --- 2. Initial, High-Priority Classifications ---
-    const isSample = product.startsWith('S-') || /(^|\s)sample:/.test(descLower);
+    const isSample = isSampleSku || /(^|\s)sample:/.test(descLower);
     const isReserve = product.startsWith('V-') || /(^|\s)reserve:/.test(descLower);
     const isRx = productLower.includes('-rx') || descLower.includes('-rx') || /\brx\b/.test(descLower);
     const demoLensKeywords = ['demo lens', 'demo lenses', 'demo len', 'demo acrylic', 'demo cr39', 'cr39 demo'];
