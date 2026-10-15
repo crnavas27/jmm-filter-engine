@@ -136,7 +136,13 @@ export function classifyRow(row) {
     ];
     const isOtherKeyword = otherKeywords.some(k => productLower.includes(k) || descLower.includes(k));
     // Force baseball merchandise into "Other" even when SKU looks frame-like.
-    const isBaseballMerch = /\bbaseball(?:\s*bats?)?\b/.test(descLowerExpanded) || /\bbaseball(?:\s*bats?)?\b/.test(productLowerExpanded);
+    // A JMM STYLE SKU — JMM + the style's code, no dash, then the colour (JMMHU-88, JMMFMJ-16U) — is eyewear
+    // (Carlos, Oct 15 2026): words in its DESCRIPTION can't make it apparel or merchandise. "FULL-METAL-JACKET,
+    // Tank" — the Kubrick style — read as a jacket and showed under Other. On the live stock file all 1,242 such
+    // SKUs (373 styles) are eyewear; JMM merchandise always has a dash right after JMM (JMM-POP-…, JMM-UB…).
+    // Clip-ons, lenses, parts (…SPF/…SPT), samples and reserves keep their own rules.
+    const isJmmStyleSku = /^jmm[a-z0-9]+-/.test(productLower);
+    const isBaseballMerch = (!isJmmStyleSku && /\bbaseball(?:\s*bats?)?\b/.test(descLowerExpanded)) || /\bbaseball(?:\s*bats?)?\b/.test(productLowerExpanded);
     const productSkuCompact = productLower.replace(/[^a-z0-9]+/g, '');
     const isOacSku = productLower.startsWith('j-oac') ||
         productLower.startsWith('j_oac') ||
@@ -163,7 +169,7 @@ export function classifyRow(row) {
         const normalizedKeyword = toWordHaystack(keyword.toLowerCase());
         return normalizedKeyword.trim().length > 0 && wordMatchHaystack.includes(normalizedKeyword);
     };
-    const isApparel = hasStandaloneTee || apparelKeywords.some(matchesApparelKeyword);
+    const isApparel = !isJmmStyleSku && (hasStandaloneTee || apparelKeywords.some(matchesApparelKeyword));
     // Eyewear-department SKUs (J-E??-…) are frames only when the family is SN (sun) or RX. Every
     // other family in the department is merchandise that ships alongside frames — AC accessories,
     // DP displays, ID cards, BX boxes, CS/EC cases, DB dust bags, CC cloths, CN chains, BK books,
@@ -251,7 +257,7 @@ export function classifyRow(row) {
     // Use word boundaries for "ring" to avoid matching brand names like "RINGO".
     // Also check for "lighter case" pattern in description
     const accessoryWordRe = /\b(necklace|necklaces|pendant|pendants|bolo|ring|rings|eyewear|bracelet|bracelets|bangle|bangles|cuff|cuffs|cufflink|cufflinks|earring|earrings|brooch|brooches|wallet|wallets|key\s*chain|keychain|key\s*ring|lanyard|belt|belts|clean|cleaning|cleaner|cloth|cloths|microfiber|wipes?|spray|solution|polish|kit|care\s*kit|repair\s*kit|tool\s*kit|cleaning\s*kit|pouch|pouches|sleeve|sleeves|dust[\s-]*bag|travel\s*case|slip\s?case|slipcase|case|cases|box|boxes|boite|gift\s*box|gift\s*bag|box\s*set|carton|chain|chains|t-?bar|card\s*holder|card\s*set|catch(?:-| )?all|ash(?:-| )?tray|display\s*tray|tray|stand|poster|print|book|booklet|catalog|zine|sticker|stickers|stationery|demo\s+lens|demo\s+lenses|lens\s+case|usb|charger|speaker|flashlight|lamp|clock|timer|paperweight|figurine|statue|ornament|coaster|candle|vase|planter|id\s*card)\b|lapel\s+pin|enamel\s+pin|pin\s+set|collector\s+pin|pin\s+badge/;
-    const accessoryDesc = accessoryWordRe.test(descLower) || accessoryWordRe.test(productLower);
+    const accessoryDesc = (!isJmmStyleSku && accessoryWordRe.test(descLower)) || accessoryWordRe.test(productLower);
     const isOtherCandidate = isBaseballMerch || isOtherCode || accessoryDesc || isAccessorySku || isApparel || (!isLikelyFrameSku && isOtherCandidateRaw);
     // A "complete frame" is the default classification if it's not identified as any other category.
     const isCompleteFrame = isLikelyFrameSku && !isParts && !isLens && !isClipOn && !isSample && !isReserve && !isOtherCandidate && !isDemo;
