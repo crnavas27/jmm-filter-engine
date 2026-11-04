@@ -244,7 +244,11 @@ export function classifyRow(row) {
         // Pattern-based detection
         productLower.includes('-blts-') || productLower.includes('vinyl') ||
         productLower.includes('case-') || productLower.includes('envelope');
-    const isLikelyFrameSku = /^jmm[a-z0-9]/.test(productLower) || (/^j-/.test(productLower) && !isAccessorySku);
+    // A V- RESERVE of a sun or RX frame (V-ESN-…, V-ERX-…) is still a frame — V stands where the J
+    // would be (Carlos, Nov 3 2026): V-ERX-HE-26-WF_480 "Hemmings, Shadow, Demo Lens CR" showed under
+    // Lenses. Its "Demo Lens" is the frame's own demo lens, as on J- frames; it stays a reserve.
+    const isReserveFrameSku = /^v-e(sn|rx)-/.test(productLower);
+    const isLikelyFrameSku = /^jmm[a-z0-9]/.test(productLower) || (/^j-/.test(productLower) && !isAccessorySku) || isReserveFrameSku;
     const forcedLensSku = isLensDepartmentSku ||
         productLower.startsWith('000-') ||
         productLower.startsWith('003-') ||
