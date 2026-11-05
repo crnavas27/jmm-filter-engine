@@ -258,11 +258,14 @@ export function classifyRow(row: Record<string, string>) {
     // Pattern-based detection
     productLower.includes('-blts-') || productLower.includes('vinyl') || 
     productLower.includes('case-') || productLower.includes('envelope');
-  // A V- RESERVE of a sun or RX frame (V-ESN-…, V-ERX-…) is still a frame — V stands where the J
-  // would be (Carlos, Nov 3 2026): V-ERX-HE-26-WF_480 "Hemmings, Shadow, Demo Lens CR" showed under
-  // Lenses. Its "Demo Lens" is the frame's own demo lens, as on J- frames; it stays a reserve.
-  const isReserveFrameSku = /^v-e(sn|rx)-/.test(productLower);
-  const isLikelyFrameSku = /^jmm[a-z0-9]/.test(productLower) || (/^j-/.test(productLower) && !isAccessorySku) || isReserveFrameSku;
+  // A FRAME is only what a frame SKU looks like (Carlos, Nov 4 2026): a JMM style (JMMHU-88), or the
+  // eyewear department's sun and RX families, J-ESN-… and J-ERX-… — on the live stock file every
+  // complete frame is one of these three. Any other J- SKU used to count as a frame unless it was on
+  // the accessory list, so each new accessory family landed in Frames (J-LAC-PPH passport holders);
+  // now it goes to Other (see isOther). A V- RESERVE of a sun or RX frame (V-ESN-…, V-ERX-…) is a frame
+  // too — V stands where the J would be (Nov 3: V-ERX-HE-26-WF_480 "Hemmings, Shadow, Demo Lens CR"
+  // showed under Lenses; its "Demo Lens" is the frame's own demo lens). It stays a reserve.
+  const isLikelyFrameSku = isJmmStyleSku || /^[jv]-e(sn|rx)-/.test(productLower);
 
   const forcedLensSku =
     isLensDepartmentSku ||
@@ -274,6 +277,8 @@ export function classifyRow(row: Record<string, string>) {
     isDemo = false;
   }
   const isDemoLens = hasDemoLensLanguage && !forcedLensSku && isLikelyFrameSku;
+  // "demo" makes a demo FRAME — on anything that is not a frame SKU it says nothing ("Demo display tray")
+  if (!isLikelyFrameSku) isDemo = false;
 
   // Use word boundaries for "ring" to avoid matching brand names like "RINGO".
   // Also check for "lighter case" pattern in description
@@ -281,9 +286,11 @@ export function classifyRow(row: Record<string, string>) {
   const accessoryDesc = (!isJmmStyleSku && accessoryWordRe.test(descLower)) || accessoryWordRe.test(productLower);
   const isOtherCandidate = isBaseballMerch || isOtherCode || accessoryDesc || isAccessorySku || isApparel || (!isLikelyFrameSku && isOtherCandidateRaw);
 
-  // A "complete frame" is the default classification if it's not identified as any other category.
+  // A "complete frame" needs a frame SKU (isLikelyFrameSku) and no other category.
   const isCompleteFrame = isLikelyFrameSku && !isParts && !isLens && !isClipOn && !isSample && !isReserve && !isOtherCandidate && !isDemo;
-  const isOther = !isCompleteFrame && !isRx && !isParts && !isLens && !isSample && !isReserve && isOtherCandidate;
+  // OTHER is the default (Carlos, Nov 4 2026): whatever is not a frame, lens, part, clip-on, sample or
+  // reserve — so a product nobody has a rule for yet lands here, never in Frames.
+  const isOther = !isCompleteFrame && !isRx && !isParts && !isLens && !isClipOn && !isSample && !isReserve && (isOtherCandidate || !isLikelyFrameSku);
   
   
   // If an item doesn't fit any category, it's marked as "unknown".
